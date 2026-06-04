@@ -1,0 +1,34 @@
+{
+  "name": "pet-doctor-ai-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "宠物医生 AI 医助 MVP monorepo",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev:h5 -w frontend",
+    "dev:backend": "npm run dev -w backend",
+    "build": "npm run build -w backend && npm run build:h5 -w frontend",
+    "typecheck": "npm run typecheck -w backend && npm run typecheck -w frontend",
+    "lint": "prettier --check .",
+    "test": "npm run smoke:mvp",
+    "smoke:mvp": "node --import tsx scripts/mvp-smoke-test.ts",
+    "db:generate": "npm run db:generate -w backend",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:setup:sqlite": "npm run db:setup:sqlite -w backend",
+    "db:seed": "npm run db:seed -w backend",
+    "db:studio": "npm run db:studio -w backend",
+    "docker:up": "./scripts/docker-up.sh",
+    "docker:down": "./scripts/docker-down.sh",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "宠物医生 AI 医助",
+  "appid": "__UNI__PETAI",
+  "description": "宠物医生 AI 医助 MVP",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "h5": {
+    "title": "宠物医生 AI 医助",
+    "router": {
+      "mode": "hash"
+    }
+  },
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "postcss": true,
+      "minified": true
+    },
+    "permission": {
+      "scope.record": {
+        "desc": "用于在宠物医院接诊沟通中录音，并生成 AI 辅助整理结果；录音前需取得沟通对象同意。"
+      }
+    },
+    "usingComponents": true
+  }
+}

@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - deploy/docker.env.example
+    environment:
+      DATABASE_URL: file:/app/data/dev.db
+      LOCAL_STORAGE_DIR: /app/storage/private
+    volumes:
+      - sqlite-data:/app/data
+      - private-storage:/app/storage/private
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    ports:
+      - '8080:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  sqlite-data:
+  private-storage:

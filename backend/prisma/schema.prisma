@@ -1,0 +1,503 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                 String             @id @default(cuid())
+  username           String             @unique
+  passwordHash       String             @map("password_hash")
+  phone              String?            @unique
+  nickname           String?
+  avatar             String?
+  role               String             @default("doctor")
+  position           String?
+  city               String?
+  currentStoreId     String?            @map("current_store_id")
+  isDirector         Boolean            @default(false) @map("is_director")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  lastLoginAt        DateTime?          @map("last_login_at")
+  status             String             @default("active")
+
+  currentStore       Store?             @relation("CurrentStore", fields: [currentStoreId], references: [id], onDelete: SetNull)
+  authBindings       UserAuthBinding[]
+  storeRelations     UserStoreRelation[]
+  memories           Memory[]
+  memorySuggestions  MemoryUpdateSuggestion[]
+  recordings         Recording[]
+  generationResults  GenerationResult[]
+  generationFeedback GenerationFeedback[]
+  todos              Todo[]
+  customRequirements CustomToolRequirement[]
+  projects           Project[]
+  projectItems       ProjectItem[]
+  resources          Resource[]
+  auditLogs          AuditLog[]
+  aiCallLogs         AiCallLog[]
+
+  @@index([currentStoreId], map: "idx_users_current_store_id")
+  @@index([status], map: "idx_users_status")
+  @@index([createdAt], map: "idx_users_created_at")
+  @@map("users")
+}
+
+model UserAuthBinding {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  authType       String   @map("auth_type")
+  provider       String
+  providerUserId String   @map("provider_user_id")
+  unionId        String?  @map("union_id")
+  credentialHash String?  @map("credential_hash")
+  status         String   @default("active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId], map: "uq_user_auth_bindings_provider_user")
+  @@index([userId], map: "idx_user_auth_bindings_user_id")
+  @@index([status], map: "idx_user_auth_bindings_status")
+  @@index([createdAt], map: "idx_user_auth_bindings_created_at")
+  @@map("user_auth_bindings")
+}
+
+model Store {
+  id             String              @id @default(cuid())
+  name           String
+  code           String?             @unique
+  city           String?
+  address        String?
+  phone          String?
+  status         String              @default("active")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  deletedAt      DateTime?           @map("deleted_at")
+
+  currentUsers   User[]              @relation("CurrentStore")
+  relations      UserStoreRelation[]
+  memories       Memory[]
+  recordings     Recording[]
+  projects       Project[]
+  resources      Resource[]
+
+  @@index([status], map: "idx_stores_status")
+  @@index([createdAt], map: "idx_stores_created_at")
+  @@index([deletedAt], map: "idx_stores_deleted_at")
+  @@map("stores")
+}
+
+model UserStoreRelation {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  storeId     String   @map("store_id")
+  role        String   @default("doctor")
+  position    String?
+  isDefault   Boolean  @default(false) @map("is_default")
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storeId], map: "uq_user_store_relations_user_store")
+  @@index([userId], map: "idx_user_store_relations_user_id")
+  @@index([storeId], map: "idx_user_store_relations_store_id")
+  @@index([status], map: "idx_user_store_relations_status")
+  @@index([createdAt], map: "idx_user_store_relations_created_at")
+  @@map("user_store_relations")
+}
+
+model Memory {
+  id                String                   @id @default(cuid())
+  userId            String                   @map("user_id")
+  storeId           String?                  @map("store_id")
+  sourceRecordingId String?                  @map("source_recording_id")
+  petOwnerName      String?                  @map("pet_owner_name")
+  petName           String?                  @map("pet_name")
+  memoryType        String                   @default("customer_profile") @map("memory_type")
+  title             String?
+  contentJson       Json?                    @map("content_json")
+  contentText       String?                  @map("content_text")
+  status            String                   @default("active")
+  createdAt         DateTime                 @default(now()) @map("created_at")
+  updatedAt         DateTime                 @updatedAt @map("updated_at")
+  deletedAt         DateTime?                @map("deleted_at")
+
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store             Store?                   @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  sourceRecording   Recording?               @relation(fields: [sourceRecordingId], references: [id], onDelete: SetNull)
+  suggestions       MemoryUpdateSuggestion[]
+
+  @@index([userId], map: "idx_memories_user_id")
+  @@index([storeId], map: "idx_memories_store_id")
+  @@index([sourceRecordingId], map: "idx_memories_recording_id")
+  @@index([status], map: "idx_memories_status")
+  @@index([createdAt], map: "idx_memories_created_at")
+  @@index([deletedAt], map: "idx_memories_deleted_at")
+  @@map("memories")
+}
+
+model MemoryUpdateSuggestion {
+  id                 String                       @id @default(cuid())
+  memoryId           String?                      @map("memory_id")
+  userId             String                       @map("user_id")
+  recordingId        String?                      @map("recording_id")
+  generationResultId String?                      @map("generation_result_id")
+  suggestionType     String                       @default("update") @map("suggestion_type")
+  beforeData         Json?                        @map("before_data")
+  afterData          Json?                        @map("after_data")
+  reason             String?
+  status             MemoryUpdateSuggestionStatus @default(pending)
+  createdAt          DateTime                     @default(now()) @map("created_at")
+  updatedAt          DateTime                     @updatedAt @map("updated_at")
+
+  memory             Memory?                      @relation(fields: [memoryId], references: [id], onDelete: SetNull)
+  user               User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recording          Recording?                   @relation(fields: [recordingId], references: [id], onDelete: SetNull)
+  generationResult   GenerationResult?            @relation(fields: [generationResultId], references: [id], onDelete: SetNull)
+
+  @@index([memoryId], map: "idx_memory_update_suggestions_memory_id")
+  @@index([userId], map: "idx_memory_update_suggestions_user_id")
+  @@index([recordingId], map: "idx_memory_update_suggestions_recording_id")
+  @@index([generationResultId], map: "idx_memory_update_suggestions_generation_result_id")
+  @@index([status], map: "idx_memory_update_suggestions_status")
+  @@index([createdAt], map: "idx_memory_update_suggestions_created_at")
+  @@map("memory_update_suggestions")
+}
+
+model Recording {
+  id                 String                    @id @default(cuid())
+  userId             String                    @map("user_id")
+  storeId            String?                   @map("store_id")
+  audioUrl           String                    @map("audio_url")
+  audioFormat        String?                   @map("audio_format")
+  audioDuration      Int?                      @map("audio_duration")
+  uploadType         String                    @default("web_recording") @map("upload_type")
+  transcriptText     String?                   @map("transcript_text")
+  aiDetectedScene    String?                   @map("ai_detected_scene")
+  processingStatus   RecordingProcessingStatus @default(uploaded) @map("processing_status")
+  petOwnerName       String?                   @map("pet_owner_name")
+  petName            String?                   @map("pet_name")
+  errorMessage       String?                   @map("error_message")
+  createdAt          DateTime                  @default(now()) @map("created_at")
+  updatedAt          DateTime                  @updatedAt @map("updated_at")
+  deletedAt          DateTime?                 @map("deleted_at")
+
+  user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store              Store?                    @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  memories           Memory[]
+  memorySuggestions  MemoryUpdateSuggestion[]
+  generationResults  GenerationResult[]
+  todos              Todo[]
+  customRequirements CustomToolRequirement[]
+  aiCallLogs         AiCallLog[]
+
+  @@index([userId], map: "idx_recordings_user_id")
+  @@index([storeId], map: "idx_recordings_store_id")
+  @@index([processingStatus], map: "idx_recordings_processing_status")
+  @@index([createdAt], map: "idx_recordings_created_at")
+  @@index([deletedAt], map: "idx_recordings_deleted_at")
+  @@map("recordings")
+}
+
+model GenerationResult {
+  id                 String                   @id @default(cuid())
+  recordingId        String                   @map("recording_id")
+  userId             String                   @map("user_id")
+  resultType         GenerationResultType     @map("result_type")
+  title              String
+  contentJson        Json?                    @map("content_json")
+  contentText        String?                  @map("content_text")
+  moduleStatus       GenerationModuleStatus   @default(pending) @map("module_status")
+  status             GenerationStatus         @default(draft)
+  isDefaultGenerated Boolean                  @default(true) @map("is_default_generated")
+  version            Int                      @default(1)
+  confirmedByUser    Boolean                  @default(false) @map("confirmed_by_user")
+  confirmedAt        DateTime?                @map("confirmed_at")
+  createdAt          DateTime                 @default(now()) @map("created_at")
+  updatedAt          DateTime                 @updatedAt @map("updated_at")
+  deletedAt          DateTime?                @map("deleted_at")
+
+  recording          Recording                @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedback           GenerationFeedback[]
+  memorySuggestions  MemoryUpdateSuggestion[]
+  todos              Todo[]
+  customRequirements CustomToolRequirement[]
+  aiCallLogs         AiCallLog[]
+
+  @@index([recordingId], map: "idx_generation_results_recording_id")
+  @@index([userId], map: "idx_generation_results_user_id")
+  @@index([resultType], map: "idx_generation_results_result_type")
+  @@index([moduleStatus], map: "idx_generation_results_module_status")
+  @@index([status], map: "idx_generation_results_status")
+  @@index([createdAt], map: "idx_generation_results_created_at")
+  @@index([deletedAt], map: "idx_generation_results_deleted_at")
+  @@map("generation_results")
+}
+
+model GenerationFeedback {
+  id                 String                   @id @default(cuid())
+  generationResultId String                   @map("generation_result_id")
+  userId             String                   @map("user_id")
+  action             GenerationFeedbackAction
+  reason             String?
+  customReason       String?                  @map("custom_reason")
+  createdAt          DateTime                 @default(now()) @map("created_at")
+  updatedAt          DateTime                 @updatedAt @map("updated_at")
+
+  generationResult   GenerationResult         @relation(fields: [generationResultId], references: [id], onDelete: Cascade)
+  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([generationResultId], map: "idx_generation_feedback_generation_result_id")
+  @@index([userId], map: "idx_generation_feedback_user_id")
+  @@index([action], map: "idx_generation_feedback_action")
+  @@index([createdAt], map: "idx_generation_feedback_created_at")
+  @@map("generation_feedback")
+}
+
+model Todo {
+  id                 String       @id @default(cuid())
+  userId             String       @map("user_id")
+  recordingId        String?      @map("recording_id")
+  generationResultId String?      @map("generation_result_id")
+  title              String
+  description        String?
+  petOwnerName       String?      @map("pet_owner_name")
+  petName            String?      @map("pet_name")
+  dueTime            DateTime?    @map("due_time")
+  status             TodoStatus   @default(pending)
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recording          Recording?   @relation(fields: [recordingId], references: [id], onDelete: SetNull)
+  generationResult   GenerationResult? @relation(fields: [generationResultId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_todos_user_id")
+  @@index([recordingId], map: "idx_todos_recording_id")
+  @@index([generationResultId], map: "idx_todos_generation_result_id")
+  @@index([status], map: "idx_todos_status")
+  @@index([createdAt], map: "idx_todos_created_at")
+  @@map("todos")
+}
+
+model CustomToolRequirement {
+  id                 String                      @id @default(cuid())
+  userId             String                      @map("user_id")
+  recordingId        String?                     @map("recording_id")
+  generationResultId String?                     @map("generation_result_id")
+  title              String
+  description        String?
+  requirementJson    Json?                       @map("requirement_json")
+  requirementText    String?                     @map("requirement_text")
+  status             CustomToolRequirementStatus @default(draft)
+  createdAt          DateTime                    @default(now()) @map("created_at")
+  updatedAt          DateTime                    @updatedAt @map("updated_at")
+  deletedAt          DateTime?                   @map("deleted_at")
+
+  user               User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recording          Recording?                  @relation(fields: [recordingId], references: [id], onDelete: SetNull)
+  generationResult   GenerationResult?           @relation(fields: [generationResultId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_custom_tool_requirements_user_id")
+  @@index([recordingId], map: "idx_custom_tool_requirements_recording_id")
+  @@index([generationResultId], map: "idx_custom_tool_requirements_generation_result_id")
+  @@index([status], map: "idx_custom_tool_requirements_status")
+  @@index([createdAt], map: "idx_custom_tool_requirements_created_at")
+  @@index([deletedAt], map: "idx_custom_tool_requirements_deleted_at")
+  @@map("custom_tool_requirements")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  userId      String        @map("user_id")
+  storeId     String?       @map("store_id")
+  name        String
+  description String?
+  status      String        @default("active")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  deletedAt   DateTime?     @map("deleted_at")
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store       Store?        @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  items       ProjectItem[]
+  resources   Resource[]
+
+  @@index([userId], map: "idx_projects_user_id")
+  @@index([storeId], map: "idx_projects_store_id")
+  @@index([status], map: "idx_projects_status")
+  @@index([createdAt], map: "idx_projects_created_at")
+  @@index([deletedAt], map: "idx_projects_deleted_at")
+  @@map("projects")
+}
+
+model ProjectItem {
+  id          String    @id @default(cuid())
+  projectId   String    @map("project_id")
+  userId      String?   @map("user_id")
+  title       String
+  description String?
+  itemType    String    @default("note") @map("item_type")
+  status      String    @default("active")
+  sortOrder   Int       @default(0) @map("sort_order")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([projectId], map: "idx_project_items_project_id")
+  @@index([userId], map: "idx_project_items_user_id")
+  @@index([status], map: "idx_project_items_status")
+  @@index([createdAt], map: "idx_project_items_created_at")
+  @@index([deletedAt], map: "idx_project_items_deleted_at")
+  @@map("project_items")
+}
+
+model Resource {
+  id           String    @id @default(cuid())
+  userId       String?   @map("user_id")
+  storeId      String?   @map("store_id")
+  projectId    String?   @map("project_id")
+  title        String
+  resourceType String    @default("document") @map("resource_type")
+  url          String?
+  contentText  String?   @map("content_text")
+  metadataJson Json?     @map("metadata_json")
+  status       String    @default("active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  store        Store?    @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  project      Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_resources_user_id")
+  @@index([storeId], map: "idx_resources_store_id")
+  @@index([projectId], map: "idx_resources_project_id")
+  @@index([status], map: "idx_resources_status")
+  @@index([createdAt], map: "idx_resources_created_at")
+  @@index([deletedAt], map: "idx_resources_deleted_at")
+  @@map("resources")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  action     String
+  targetType String   @map("target_type")
+  targetId   String?  @map("target_id")
+  beforeData Json?    @map("before_data")
+  afterData  Json?    @map("after_data")
+  createdAt  DateTime @default(now()) @map("created_at")
+  ip         String?
+  userAgent  String?  @map("user_agent")
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_audit_logs_user_id")
+  @@index([targetType, targetId], map: "idx_audit_logs_target")
+  @@index([action], map: "idx_audit_logs_action")
+  @@index([createdAt], map: "idx_audit_logs_created_at")
+  @@map("audit_logs")
+}
+
+model AiCallLog {
+  id                 String           @id @default(cuid())
+  userId             String?          @map("user_id")
+  recordingId        String?          @map("recording_id")
+  generationResultId String?          @map("generation_result_id")
+  callType           String           @map("call_type")
+  provider           String
+  modelName          String           @map("model_name")
+  promptVersion      String?          @map("prompt_version")
+  inputTokens        Int?             @map("input_tokens")
+  outputTokens       Int?             @map("output_tokens")
+  latencyMs          Int?             @map("latency_ms")
+  status             String           @default("success")
+  errorMessage       String?          @map("error_message")
+  estimatedCost      Decimal?         @map("estimated_cost")
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  user               User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  recording          Recording?       @relation(fields: [recordingId], references: [id], onDelete: SetNull)
+  generationResult   GenerationResult? @relation(fields: [generationResultId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_ai_call_logs_user_id")
+  @@index([recordingId], map: "idx_ai_call_logs_recording_id")
+  @@index([generationResultId], map: "idx_ai_call_logs_generation_result_id")
+  @@index([status], map: "idx_ai_call_logs_status")
+  @@index([createdAt], map: "idx_ai_call_logs_created_at")
+  @@map("ai_call_logs")
+}
+
+enum RecordingProcessingStatus {
+  uploading
+  uploaded
+  transcribing
+  generating
+  completed
+  failed
+}
+
+enum GenerationResultType {
+  summary
+  medical_record
+  communication_review
+  customer_profile
+  upsell_opportunities
+  smart_followup
+  medical_risk_control
+  team_knowledge
+}
+
+enum GenerationModuleStatus {
+  pending
+  generating
+  completed
+  failed
+  regenerated
+}
+
+enum GenerationStatus {
+  draft
+  saved
+  adopted
+  rejected
+  regenerated
+  confirmed
+}
+
+enum GenerationFeedbackAction {
+  adopt
+  reject
+  regenerate
+}
+
+enum TodoStatus {
+  pending
+  completed
+  cancelled
+}
+
+enum MemoryUpdateSuggestionStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum CustomToolRequirementStatus {
+  draft
+  generated
+  archived
+}
