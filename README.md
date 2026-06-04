@@ -115,6 +115,22 @@ docs/mvp-acceptance.md          # MVP 手动验收路径
 
 ### 启动服务
 
+1. 复制 Docker 环境变量模板，生成不会提交到 Git 的私有配置：
+
+```bash
+cp deploy/docker.env.example deploy/docker.env
+```
+
+2. 打开 `deploy/docker.env`，至少完成以下检查：
+
+- 替换 `JWT_SECRET` 和 `PRIVATE_FILE_SIGNING_SECRET`，不要使用示例值。
+- 将 `CORS_ORIGIN` 改为实际访问 H5 的域名，例如 `https://ai.example.com`。
+- 保持 Docker H5 推荐的 `VITE_API_BASE_URL=/api`，由 Nginx 反向代理后端。
+- 确认是否继续使用 `TRANSCRIPTION_PROVIDER=mock` 和 `LLM_PROVIDER=mock`。演示部署可以使用 mock；真实业务上线前必须切换真实 provider 并填写对应密钥。
+- 演示环境可使用 `SEED_ON_START=true` 创建 `demo_doctor / demo_password`；正式部署必须在真实账号创建后改为 `false`。
+
+3. 启动 Docker 服务：
+
 ```bash
 npm run docker:up
 ```
@@ -152,24 +168,37 @@ docker compose down -v
 npm run docker:up
 ```
 
+4. 验证健康检查：
+
+```bash
+curl http://localhost:8080/api/health
+```
+
+5. 停止服务：
+
+```bash
+npm run docker:down
+```
+
 ### 环境变量
 
-Docker 第一版默认读取 `deploy/docker.env.example`。正式部署前应复制一份私有环境文件并修改密钥：
+Docker 默认读取私有文件 `deploy/docker.env`。该文件已被 `.gitignore` 忽略，不能提交到 Git。首次部署前应从模板复制：
 
 ```bash
 cp deploy/docker.env.example deploy/docker.env
 ```
 
-然后在 `docker-compose.yml` 中将 `env_file` 指向 `deploy/docker.env`。
-
 关键变量：
 
-- `JWT_SECRET`：必须替换为足够长的随机字符串。
-- `CORS_ORIGIN`：H5 访问域名，默认 `http://localhost:8080`。
+- `JWT_SECRET`：必须替换为足够长的随机字符串，不能使用示例值。
+- `PRIVATE_FILE_SIGNING_SECRET`：必须替换为足够长的随机字符串，不能使用示例值。
+- `CORS_ORIGIN`：H5 访问域名，示例为 `https://ai.example.com`，部署时必须改为真实域名。
+- `VITE_API_BASE_URL`：Docker H5 推荐值为 `/api`，由 Nginx 反代后端。
 - `DATABASE_URL`：默认 `file:/app/data/dev.db`，对应 Docker volume `sqlite-data`。
 - `LOCAL_STORAGE_DIR`：默认 `/app/storage/private`，对应 Docker volume `private-storage`，用于录音私有文件。
 - `TRANSCRIPTION_PROVIDER` / `LLM_PROVIDER`：默认均为 `mock`，便于 MVP 验收闭环。
-- `SEED_ON_START`：默认 `true`，容器启动时执行幂等 seed；正式环境可改为 `false`。
+- `DEEPSEEK_API_KEY` / `QWEN_API_KEY` / 钉钉、飞书、阿里云、腾讯转写密钥：真实 provider 上线前填写。
+- `SEED_ON_START`：演示环境可用 `true`；正式部署必须在真实账号创建后改为 `false`。
 
 ### 数据库服务配置
 

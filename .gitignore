@@ -4,6 +4,13 @@ unpackage/
 .env
 .env.*
 !.env.example
+backend/.env
+frontend/.env
+deploy/docker.env
+deploy/*.local.env
+*.pem
+*.key
+*.crt
 *.log
 .DS_Store
 coverage/
