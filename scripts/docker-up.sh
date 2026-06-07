@@ -8,4 +8,7 @@ if [ ! -f deploy/docker.env ]; then
   exit 1
 fi
 
-docker compose up --build
+docker build -f backend/Dockerfile -t aiweb-backend .
+docker build --build-arg VITE_API_BASE_URL="${VITE_API_BASE_URL:-/api}" -f frontend/Dockerfile -t aiweb-frontend .
+docker compose up --no-build -d
+docker compose ps

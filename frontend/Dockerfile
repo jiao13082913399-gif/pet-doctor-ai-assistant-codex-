@@ -2,6 +2,10 @@ FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
@@ -22,4 +26,3 @@ COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/frontend/dist/build/h5 /usr/share/nginx/html
 
 EXPOSE 80
-

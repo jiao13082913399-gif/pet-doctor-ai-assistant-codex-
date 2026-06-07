@@ -89,7 +89,7 @@ npm run db:generate       # 生成 Prisma Client
 npm run db:migrate        # 执行本地数据库迁移
 npm run db:seed           # 写入测试用户与测试门店
 npm run db:studio         # 打开 Prisma Studio
-npm run docker:up         # Docker Compose 构建并启动 MVP 服务
+npm run docker:up         # 构建镜像并启动 Docker MVP 服务
 npm run docker:down       # 停止 Docker Compose 服务
 npm run build            # 构建后端与前端 H5
 npm run typecheck        # 前后端 TypeScript 检查
@@ -108,7 +108,7 @@ frontend/Dockerfile             # 构建 H5 并用 Nginx 托管静态文件
 deploy/nginx/default.conf       # Nginx 静态资源与 /api 反代配置
 deploy/docker.env.example       # Docker MVP 环境变量模板
 docker-compose.yml              # backend + frontend + SQLite volume 编排
-scripts/docker-up.sh            # docker compose up --build
+scripts/docker-up.sh            # docker build + docker compose up --no-build -d
 scripts/docker-down.sh          # docker compose down
 docs/mvp-acceptance.md          # MVP 手动验收路径
 ```
@@ -135,10 +135,12 @@ cp deploy/docker.env.example deploy/docker.env
 npm run docker:up
 ```
 
-或直接执行：
+或按脚本内步骤直接执行：
 
 ```bash
-docker compose up --build
+docker build -f backend/Dockerfile -t aiweb-backend .
+docker build --build-arg VITE_API_BASE_URL=/api -f frontend/Dockerfile -t aiweb-frontend .
+docker compose up --no-build -d
 ```
 
 启动后访问：
