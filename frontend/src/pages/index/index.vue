@@ -165,20 +165,13 @@
             >
               {{ recordButtonText }}
             </button>
-            <label
-              class="ghost-button upload-button file-picker-label"
-              :class="{ 'file-picker-disabled': recordingActionBusy }"
+            <button
+              class="ghost-button upload-button"
+              :disabled="recordingActionBusy"
+              @click="openAudioFilePicker"
             >
-              <text>上传录音</text>
-              <input
-                ref="audioFileInputRef"
-                class="file-input"
-                type="file"
-                :disabled="recordingActionBusy"
-                accept=".mp3,.wav,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/wave,audio/x-wav,audio/mp4,audio/m4a,audio/x-m4a"
-                @change="handleAudioFileSelected"
-              />
-            </label>
+              上传录音
+            </button>
           </view>
           <view class="recording-hints">
             <text v-if="!canUseMediaRecorder" class="unsupported-hint"
@@ -1485,7 +1478,6 @@ const recordingActionBusy = ref(false);
 const recordingProcessMessage = ref('');
 const recordingStartedAt = ref<number | null>(null);
 const recordingTimerText = ref('');
-const audioFileInputRef = ref<HTMLInputElement | null>(null);
 const customToolInputRef = ref<HTMLTextAreaElement | null>(null);
 const mediaRecorderRef = ref<MediaRecorder | null>(null);
 const recordingStreamRef = ref<MediaStream | null>(null);
@@ -2572,21 +2564,36 @@ function encodeAudioBufferToWav(audioBuffer: AudioBuffer): ArrayBuffer {
   return buffer;
 }
 
-function openAudioFilePicker(): void {
-  audioFileInputRef.value?.click();
-}
+const AUDIO_FILE_ACCEPT =
+  '.mp3,.wav,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/wave,audio/x-wav,audio/mp4,audio/m4a,audio/x-m4a';
 
-async function handleAudioFileSelected(event: Event): Promise<void> {
-  const input = event.target as HTMLInputElement | null;
-  const file = input?.files?.[0] ?? null;
-  if (input) {
-    input.value = '';
-  }
-  if (!file) {
+function openAudioFilePicker(): void {
+  // uni-app 的 <input type="file"> 在 H5 会被编译成 uni-input 文本框，无法弹出文件选择器。
+  // 这里在 H5 下直接创建原生 <input type="file"> 并触发，确保上传录音入口可用。
+  if (typeof document === 'undefined') {
+    setRecordingError('当前环境暂不支持选择本地音频文件。');
     return;
   }
 
-  await handleLocalAudioUpload(file);
+  if (recordingActionBusy.value) {
+    return;
+  }
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = AUDIO_FILE_ACCEPT;
+  input.style.display = 'none';
+  input.addEventListener('change', () => {
+    const file = input.files?.[0] ?? null;
+    if (input.parentNode) {
+      input.parentNode.removeChild(input);
+    }
+    if (file) {
+      void handleLocalAudioUpload(file);
+    }
+  });
+  document.body.appendChild(input);
+  input.click();
 }
 
 function isSupportedAudioFile(file: File): boolean {
@@ -3422,8 +3429,18 @@ function downloadBlob(blob: Blob, fileName: string): void {
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;
+  link.rel = 'noopener';
+  link.style.display = 'none';
+  // 必须挂到 DOM 上再点击，且不要同步 revoke，否则部分移动端 / 微信 H5 浏览器
+  // 会在下载尚未开始读取 Blob 时就回收 URL，导致下载到 0 字节或损坏的 PDF（“导出后打不开”）。
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    if (link.parentNode) {
+      link.parentNode.removeChild(link);
+    }
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 function buildExportFileName(extension: string): string {
@@ -4969,30 +4986,6 @@ onUnmounted(() => {
 
 .upload-button {
   min-width: 112px;
-}
-
-.file-picker-label {
-  position: relative;
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.file-picker-disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.file-input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
 }
 
 .unsupported-hint {
