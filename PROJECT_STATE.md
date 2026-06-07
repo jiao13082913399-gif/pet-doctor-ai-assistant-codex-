@@ -2,21 +2,27 @@
 
 项目名称：宠物医生 AI 医助
 
-当前任务：`T21 Docker 部署与 MVP 验收 + 集成验收收口`
+当前任务：`T25-T28 预发部署收口、H5 上传调试、HTTPS 方案、真实 provider 接入前评估`
 
 当前状态：已完成
 
-更新时间：2026-06-04
+更新时间：2026-06-07
 
 ## 产品范围
 
 MVP 第一阶段的核心目标是跑通“录音 / 上传音频 -> 语音转写 -> AI 生成结果 -> 编辑 / 采纳 / 保存 / 导出 -> 智能回访转待办”的完整闭环。
 
-当前阶段已完成工程初始化、第一版数据库模型、后端认证基础接口、AI / 转写 Provider 抽象层 mock 联调能力、个人 Memory 初始化 / 编辑 / 建议确认流、录音 / 音频上传后端接口、录音完成后的转写流程编排、转写后的默认 AI 生成结果落库、第六 / 第七模块主动生成、生成结果反馈与版本机制、智能回访结果一键转待办、Web H5 主框架、侧边栏和登录路由、首次登录录音授权与隐私提示、Web 端 AI 录音 / 上传 / 状态列表页面、录音结果详情页与七大结果 Tab、七大结果模块结构化前端展示、H5 第一版 PDF / 图片导出、资源库 / 项目空间 / 院长看板占位模块页面和接口结构预留、微信小程序首页 / AI / 我的三页 Tab 结构适配、T20 异常处理、审计日志与医疗安全提示统一加固，以及 T21 Docker 部署与 MVP 手动验收准备。
+当前阶段已完成工程初始化、第一版数据库模型、后端认证基础接口、AI / 转写 Provider 抽象层 mock 联调能力、个人 Memory 初始化 / 编辑 / 建议确认流、录音 / 音频上传后端接口、录音完成后的转写流程编排、转写后的默认 AI 生成结果落库、第六 / 第七模块主动生成、生成结果反馈与版本机制、智能回访结果一键转待办、Web H5 主框架、侧边栏和登录路由、首次登录录音授权与隐私提示、Web 端 AI 录音 / 上传 / 状态列表页面、录音结果详情页与七大结果 Tab、七大结果模块结构化前端展示、H5 第一版 PDF / 图片导出、资源库 / 项目空间 / 院长看板占位模块页面和接口结构预留、微信小程序首页 / AI / 我的三页 Tab 结构适配、T20 异常处理、审计日志与医疗安全提示统一加固、T21 Docker 部署与 MVP 手动验收准备，以及 T25-T28 预发部署收口、H5 上传录音调试、HTTPS 实施前方案和真实 provider 接入前评估。
 
 2026-06-03 集成验收收口：已新增 `scripts/mvp-smoke-test.ts`、根 `lint` / `test` / `smoke:mvp` 脚本、SQLite 初始化兜底脚本 `backend/prisma/sqlite-init.ts`，并修复 Docker seed 运行期依赖 `backend/src` 的问题。验收报告见 `docs/current-version-acceptance-report.md`，问题清单见 `docs/integration-issues.md`，本地运行说明见 `docs/local-run.md`。
 
 2026-06-04 集成验收复核：完成项目结构、路由、API、环境变量、部署文件、构建脚本和核心链路复查；补充根 `.gitignore` 对本地 SQLite 数据库文件的忽略规则。`prettier --check .`、后端 typecheck、前端 typecheck、后端 build、H5 build、微信小程序 build、MVP smoke test、临时 SQLite 初始化 + seed、后端健康检查 / 登录、H5 dev server 访问均通过。当前 shell 无 `npm` / `npx` / `docker`，因此未重放 `npm install` 和 Docker Compose 实机启动。
+
+2026-06-07 预发收口：新增 `docs/deployment/T25-server-preview-deployment-acceptance.md`，将服务器 Docker Compose 预发状态固化为“基础上线成功”，不等同于业务完整验收；公网 `GET http://43.129.231.8:8080/api/health` 非沙箱实测返回 200 OK。
+
+2026-06-07 H5 上传调试：修复 Web H5“上传录音”入口，从 `display: none` file input + 程序化 click 改为透明原生 file input 覆盖可见上传控件；新增 `docs/deployment/T26-preview-h5-upload-debug.md`。后端 typecheck、前端 typecheck、后端 build、H5 build 均通过；预发 API 使用 demo 账号完成 multipart 上传、mock 转写、默认生成 6 个模块最小验证。服务器 H5 更新部署和页面手动点击验证仍需 SSH / 部署授权。
+
+2026-06-07 HTTPS 与真实 provider 准备：新增 `docs/deployment/T27-domain-https-plan.md`，建议使用域名 + HTTPS，并优先采用服务器层 Nginx + Let's Encrypt 反代到 `localhost:8080`；未申请证书、未改 DNS、未开放 80 / 443。新增 `docs/deployment/T28-real-provider-readiness.md`，确认真实 provider 名称与 env 已预留，但除 mock 外均尚未实现真实客户端；建议先本地接 LLM，再接转写，真实 key 不进入 Git。
 
 ## 技术栈状态
 
@@ -33,7 +39,7 @@ MVP 第一阶段的核心目标是跑通“录音 / 上传音频 -> 语音转写
 - 审计：已实现录音删除、待办删除、生成结果保存 / 采纳 / 不采纳 / 重新生成 / 软删除的审计日志，并保留 `GET /api/audit-logs` 受限查询接口。
 - 项目 / 资源 / 看板：已保留 `projects`、`project_items`、`resources` 数据结构；T18 起项目空间挂载基础项目与条目接口，资源库与院长看板提供占位接口和明确未开放提示。
 - 导出：已实现 H5 第一版前端导出，病历 PDF 与客户画像 PDF 通过 Canvas 渲染后生成 PDF Blob 下载，客户画像图片通过 PNG 下载；小程序后续建议使用 `uni.canvasToTempFilePath` / `saveFile` 或接入服务端导出接口。
-- 部署：已完成第一版 Docker / Nginx MVP 部署方案。后端提供 `backend/Dockerfile`，H5 提供 `frontend/Dockerfile` 静态构建并由 Nginx 托管，`docker-compose.yml` 编排 backend / frontend 与 SQLite、私有录音文件 volume，`deploy/docker.env.example` 说明部署环境变量，`scripts/docker-up.sh` / `scripts/docker-down.sh` 提供启动脚本。
+- 部署：已完成第一版 Docker / Nginx MVP 部署方案与服务器预发基础上线收口。后端提供 `backend/Dockerfile`，H5 提供 `frontend/Dockerfile` 静态构建并由 Nginx 托管，`docker-compose.yml` 编排 backend / frontend 与 SQLite、私有录音文件 volume，`deploy/docker.env.example` 说明部署环境变量，`scripts/docker-up.sh` / `scripts/docker-down.sh` 提供启动脚本。预发当前通过 `http://43.129.231.8:8080` 访问，后续需在用户授权域名、DNS、80/443 和服务器 SSH 后推进 HTTPS。
 
 ## 当前项目结构
 
@@ -65,6 +71,7 @@ MVP 第一阶段的核心目标是跑通“录音 / 上传音频 -> 语音转写
 ├── docs
 │   ├── api.md
 │   ├── database-schema.md
+│   ├── deployment
 │   ├── mvp-acceptance.md
 │   └── dev-notes.md
 ├── deploy

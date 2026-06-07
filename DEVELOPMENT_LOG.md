@@ -1,5 +1,33 @@
 # 开发日志
 
+## 2026-06-07 - T25-T28 预发部署收口与真实 provider 接入前评估
+
+状态：已完成
+
+### 本次完成内容
+
+- 新增 `docs/deployment/T25-server-preview-deployment-acceptance.md`，固化服务器 Docker Compose 预发部署基础上线结论；结论限定为“基础上线成功”，不等同于业务完整验收通过。
+- 修复 Web H5“上传录音”入口：将 `display: none` file input + 程序化 click 改为透明原生 file input 覆盖可见上传控件，降低移动浏览器 / WebView 拦截文件选择器的风险。
+- 新增 `docs/deployment/T26-preview-h5-upload-debug.md`，记录问题现象、根因判断、修改文件、验证结果、未解决事项和 T27 影响。
+- 新增 `docs/deployment/T27-domain-https-plan.md`，建议使用域名 + HTTPS，并优先采用服务器层 Nginx + Let's Encrypt 反代到 `localhost:8080`；本阶段未申请证书、未改 DNS、未开放 80 / 443。
+- 新增 `docs/deployment/T28-real-provider-readiness.md`，评估真实 AI / 转写 provider 接入准备度，确认除 mock 外的真实 provider 客户端尚未实现，真实 key 不能进入 Git。
+
+### 验证记录
+
+- 公网 `GET http://43.129.231.8:8080/api/health` 非沙箱实测返回 200 OK。
+- 预发 API 最小链路验证通过：demo 账号登录、multipart 上传 1 秒 WAV、mock 转写、默认生成 6 个模块均成功。
+- `node node_modules/typescript/bin/tsc -p backend/tsconfig.json --noEmit`：通过。
+- `node node_modules/vue-tsc/bin/vue-tsc.js -p frontend/tsconfig.json --noEmit`：通过。
+- `node node_modules/typescript/bin/tsc -p backend/tsconfig.json`：通过。
+- `node ../node_modules/@dcloudio/vite-plugin-uni/bin/uni.js build -p h5`：通过，Sass legacy JS API 仍为上游 warning。
+
+### 开发决策
+
+- T26 只修复上传录音入口，不硬修 HTTP 非安全上下文导致的浏览器录音限制。
+- 当前未提供服务器 SSH、域名、DNS、80/443 或证书授权，因此不执行服务器更新部署、DNS 修改或 HTTPS 申请。
+- 当前不接入真实 LLM / 转写 provider，不填写真实 key，不切换 mock provider。
+- 真实 provider 建议先本地接 LLM，再接转写；预发切换前必须补齐超时、重试、成本控制和日志脱敏。
+
 ## 2026-06-04 - 集成验收复核
 
 状态：已完成

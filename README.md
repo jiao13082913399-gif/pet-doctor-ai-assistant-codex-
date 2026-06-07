@@ -2,7 +2,7 @@
 
 面向宠物医院一线沟通场景的 AI 医助 MVP。产品目标是跑通“录音 / 上传音频 -> 语音转写 -> AI 生成结果 -> 编辑 / 采纳 / 保存 / 导出 -> 智能回访转待办”的完整闭环。
 
-当前进度：已完成 `T21 Docker 部署与 MVP 验收`，并于 2026-06-04 完成集成验收复核。本阶段补齐后端 Dockerfile、H5 静态 Nginx 部署方案、`docker-compose.yml`、SQLite 数据 volume、环境变量模板、启动脚本、README 部署说明、`docs/mvp-acceptance.md` 手动验收路径，以及本地 smoke test / 验收报告 / 问题清单。
+当前进度：已完成 `T25-T28 预发部署收口与真实 provider 接入前评估`。2026-06-07 已将服务器 Docker Compose 预发基础上线记录为“基础上线成功”，修复 H5 上传录音文件选择入口，形成域名 + HTTPS 实施前方案，并完成真实 AI / 转写 provider 接入前 readiness 评估。当前预发仍为 HTTP、demo 账号、SQLite、mock AI、mock 转写；HTTPS、真实 provider、真实账号、数据库升级和备份策略均需在授权后继续推进。
 
 ## 目录结构
 
@@ -111,6 +111,7 @@ docker-compose.yml              # backend + frontend + SQLite volume 编排
 scripts/docker-up.sh            # docker build + docker compose up --no-build -d
 scripts/docker-down.sh          # docker compose down
 docs/mvp-acceptance.md          # MVP 手动验收路径
+docs/deployment/                # T25-T28 预发部署、HTTPS 和 provider 接入前评估
 ```
 
 ### 启动服务
