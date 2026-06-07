@@ -165,20 +165,20 @@
             >
               {{ recordButtonText }}
             </button>
-            <button
-              class="ghost-button upload-button"
-              :disabled="recordingActionBusy"
-              @click="openAudioFilePicker"
+            <label
+              class="ghost-button upload-button file-picker-label"
+              :class="{ 'file-picker-disabled': recordingActionBusy }"
             >
-              上传录音
-            </button>
-            <input
-              ref="audioFileInputRef"
-              class="file-input"
-              type="file"
-              accept=".mp3,.wav,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/wave,audio/x-wav,audio/mp4,audio/m4a,audio/x-m4a"
-              @change="handleAudioFileSelected"
-            />
+              <text>上传录音</text>
+              <input
+                ref="audioFileInputRef"
+                class="file-input"
+                type="file"
+                :disabled="recordingActionBusy"
+                accept=".mp3,.wav,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/wave,audio/x-wav,audio/mp4,audio/m4a,audio/x-m4a"
+                @change="handleAudioFileSelected"
+              />
+            </label>
           </view>
           <view class="recording-hints">
             <text v-if="!canUseMediaRecorder" class="unsupported-hint"
@@ -4971,8 +4971,28 @@ onUnmounted(() => {
   min-width: 112px;
 }
 
+.file-picker-label {
+  position: relative;
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.file-picker-disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .file-input {
-  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .unsupported-hint {
