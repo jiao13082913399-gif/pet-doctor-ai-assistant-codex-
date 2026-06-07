@@ -45,12 +45,12 @@
 
 ### 代码与构建验证
 
-| 验证项 | 结果 | 命令 / 说明 |
-| --- | --- | --- |
-| 后端 typecheck | 通过 | `node node_modules/typescript/bin/tsc -p backend/tsconfig.json --noEmit` |
+| 验证项         | 结果 | 命令 / 说明                                                                   |
+| -------------- | ---- | ----------------------------------------------------------------------------- |
+| 后端 typecheck | 通过 | `node node_modules/typescript/bin/tsc -p backend/tsconfig.json --noEmit`      |
 | 前端 typecheck | 通过 | `node node_modules/vue-tsc/bin/vue-tsc.js -p frontend/tsconfig.json --noEmit` |
-| 后端 build | 通过 | `node node_modules/typescript/bin/tsc -p backend/tsconfig.json` |
-| H5 build | 通过 | `node ../node_modules/@dcloudio/vite-plugin-uni/bin/uni.js build -p h5` |
+| 后端 build     | 通过 | `node node_modules/typescript/bin/tsc -p backend/tsconfig.json`               |
+| H5 build       | 通过 | `node ../node_modules/@dcloudio/vite-plugin-uni/bin/uni.js build -p h5`       |
 
 H5 build 仍有 Dart Sass legacy JS API deprecation warning，为上游 warning，不影响本次构建结果。
 
